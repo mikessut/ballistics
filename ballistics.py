@@ -18,7 +18,10 @@ class Ballistics( object ) :
 
     ft2m = 0.3048
     in2m = .0254
+    m2in = 1/.0254
     grain2kg = 6.479891e-5
+    kg2lb = 2.20462
+    J2ftlb = 1/1.3558179483314
 
     MV = 2500*ft2m
 
@@ -36,7 +39,7 @@ class Ballistics( object ) :
 
 
     def __init__(self) :
-        self.setLaunchAngle(1)
+        self.setLaunchAngle(0)
 
     def solve(self) :
         
@@ -77,9 +80,9 @@ class Ballistics( object ) :
         xlabel('Time (sec)');
 
         figure(3);
-        plot(self.pos[:,0],self.energy)
+        plot(self.pos[:,0],self.energy*self.J2ftlb)
         xlabel('x pos (m)')
-        ylabel('Energy (J)')
+        ylabel('Energy (ft-lb)')
         
 
 
@@ -93,23 +96,72 @@ class Ballistics( object ) :
     def setLaunchAngle(self,deg) :
         self.v0 = array([ self.MV*cos(deg*pi/180),
                           self.MV*sin(deg*pi/180) ])
+
+    def BC2Cd(self,BC) :
+        """
+        Convert ballistics coefficient to drag coefficient
+
+        http://en.wikipedia.org/wiki/Ballistic_coefficient
+        
+        BC_bullets = SD/i = SD*Cg/Cb
+        
+        SD = sectional density lb/in^2; mass in lbs / caliber squared
+             in inches
+
+        Cg = 0.5191
+
+        Cb = SD*Cg/BC
+        """
+
+        SD = self.m*Ballistics.kg2lb / (self.cal**2)
+        Cg = 0.5191
+
+        self.Cd = SD*Cg/BC
+        self.BC = BC
+
+        return self.Cd
+
+    def calcAirDensity(self,Tfarenheight,h_ft) :
+        """
+        See: http://en.wikipedia.org/wiki/Density_of_air
+
+        """
+        
+        # convert T to Kelvin
+        T = (Tfarenheight-32)*5./9 + 273.15
+        h = h_ft*self.ft2m
+
+        p0 = 101.325 
+        T0 = 288.15
+        g = 9.81
+        M = .0289644
+        R = 8.31447
+        L = .0065
+        Rs = 287.058
+
+        p = p0*(1-L*h/T0)**(g*M/R/L)
+
+
+        return (p*1000)*M/R/T
         
 
 class Bullet30_06( Ballistics ) :
-
-    A = pi*(.308*Ballistics.in2m)**2/4
+    cal = .308   # in inches
+    A = pi*(cal*Ballistics.in2m)**2/4
     MV = 2500*Ballistics.ft2m
     m = 200*Ballistics.grain2kg
 
 class Bullet22LR( Ballistics ) :
-    A = pi*(.223*Ballistics.in2m)**2/4
+    cal = .223   # in inches
+    A = pi*(cal*Ballistics.in2m)**2/4
     MV = 1750*Ballistics.ft2m
     m = 30*Ballistics.grain2kg
     
 class Bullet300WinMag( Ballistics ) :
-    A = pi*(.308*Ballistics.in2m)**2/4
-    MV = 3029*Ballistics.ft2m
-    m = 200*Ballistics.grain2kg
+    cal = .308   # in inches
+    A = pi*(cal*Ballistics.in2m)**2/4
+    MV = 2950*Ballistics.ft2m
+    m = 180*Ballistics.grain2kg
     
 
 if __name__ == '__main__' :
@@ -122,6 +174,7 @@ if __name__ == '__main__' :
     b30_06.solve()
 
     b300winmag = Bullet300WinMag()
+    b300winmag.BC2Cd(0.509)
     b300winmag.solve()
 
     b22.plot()
