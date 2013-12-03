@@ -14,7 +14,7 @@ class Ballistics( object ) :
 
     g = array([0,-9.81])   # gravity (m/s^2)
 
-    dt = .001  # sec)
+    dt = .0005  # sec)
 
     ft2m = 0.3048
     in2m = .0254
@@ -97,14 +97,19 @@ class Ballistics( object ) :
 
 class Bullet30_06( Ballistics ) :
 
-    A = pi*(.3*Ballistics.in2m)**2/4
+    A = pi*(.308*Ballistics.in2m)**2/4
     MV = 2500*Ballistics.ft2m
     m = 200*Ballistics.grain2kg
 
 class Bullet22LR( Ballistics ) :
-    A = pi*(.22*Ballistics.in2m)**2/4
+    A = pi*(.223*Ballistics.in2m)**2/4
     MV = 1750*Ballistics.ft2m
     m = 30*Ballistics.grain2kg
+    
+class Bullet300WinMag( Ballistics ) :
+    A = pi*(.308*Ballistics.in2m)**2/4
+    MV = 3029*Ballistics.ft2m
+    m = 200*Ballistics.grain2kg
     
 
 if __name__ == '__main__' :
@@ -116,6 +121,10 @@ if __name__ == '__main__' :
     b30_06 = Bullet30_06()
     b30_06.solve()
 
+    b300winmag = Bullet300WinMag()
+    b300winmag.solve()
+
     b22.plot()
     b30_06.plot()
+    b300winmag.plot()
     show()
