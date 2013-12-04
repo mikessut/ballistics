@@ -1,4 +1,5 @@
 from numpy import *
+from scipy.optimize import fmin
 
 class Ballistics( object ) :
 
@@ -35,15 +36,33 @@ class Ballistics( object ) :
 
     A = pi*(.3*in2m)**2/4
 
-    theta0 = 1*pi/180
+    sightHeight = 1.5*in2m  
 
 
-    def __init__(self) :
-        self.setLaunchAngle(0)
+    # def __init__(self) :
+    #     self.setLaunchAngle(0)
+
+    def zeroSight(self,range,theta0_guess=.1*pi/180) :
+        """
+        Zero the sights at specified range (in meters).
+        """
+
+        # Iteratively adjust launch angle until on target (within some
+        # tolerance at desired range.
+
+        def minFunc(angle) :
+            self.setLaunchAngle(angle[0])
+            self.solve()
+            idx = find(self.pos[:,0] > range)
+            return self.pos[idx[0],1]**2
+
+        X = fmin(minFunc,theta0_guess)
+        self.setLaunchAngle(X[0])
+        return X[0]
 
     def solve(self) :
         
-        pos = [array([0,0])]
+        pos = [array([0,-self.sightHeight])]
         vel = [self.v0]
         t = [0]
 
@@ -93,9 +112,10 @@ class Ballistics( object ) :
         """
         return -.5*self.rho*v**2*self.Cd*self.A/self.m
 
-    def setLaunchAngle(self,deg) :
-        self.v0 = array([ self.MV*cos(deg*pi/180),
-                          self.MV*sin(deg*pi/180) ])
+    def setLaunchAngle(self,angle) :
+        self.theta0 = angle
+        self.v0 = array([ self.MV*cos(self.theta0),
+                          self.MV*sin(self.theta0) ])
 
     def BC2Cd(self,BC) :
         """
