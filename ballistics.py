@@ -20,6 +20,8 @@ class Ballistics( object ) :
     ft2m = 0.3048
     in2m = .0254
     m2in = 1/.0254
+    m2yrd = 1.09361
+    yrd2m = 1/1.09361
     grain2kg = 6.479891e-5
     kg2lb = 2.20462
     J2ftlb = 1/1.3558179483314
@@ -56,7 +58,7 @@ class Ballistics( object ) :
             idx = find(self.pos[:,0] > range)
             return self.pos[idx[0],1]**2
 
-        X = fmin(minFunc,theta0_guess)
+        X = fmin(minFunc,theta0_guess,ftol=.001**2)
         self.setLaunchAngle(X[0])
         return X[0]
 
@@ -83,26 +85,38 @@ class Ballistics( object ) :
     def plot(self) :
         figure(1); 
 
-        plot(self.pos[:,0],self.pos[:,1])
-        xlabel('Pos (m)')
-        ylabel('Pos (m)')
+        plot(self.pos[:,0]*self.m2yrd,self.pos[:,1]*self.m2in,label=self.name)
+        xlabel('Pos (yrd)')
+        ylabel('Pos (in)')
+        legend(loc=0)
 
         figure(2); 
         subplot(211)
-        plot(self.t,self.vel[:,0])
+        plot(self.t,self.vel[:,0],label=self.name)
         ylabel('x vel (m/s)')
+        legend(loc=0)
 
         subplot(212)
-        plot(self.t,self.vel[:,1])
+        plot(self.t,self.vel[:,1],label=self.name)
         ylabel('y vel (m/s)')
 
         xlabel('Time (sec)');
+        legend(loc=0)
 
         figure(3);
-        plot(self.pos[:,0],self.energy*self.J2ftlb)
+        plot(self.pos[:,0],self.energy*self.J2ftlb,label=self.name)
         xlabel('x pos (m)')
         ylabel('Energy (ft-lb)')
-        
+        legend(loc=0)
+
+        figure(4);
+        # 1./60 deg = 1 MOA
+        idx = self.pos[:,0] > 100
+        plot(self.pos[idx,0],arctan(self.pos[idx,1]/self.pos[idx,0])*180/pi*60,label=self.name)
+        xlabel('x pos (m)')
+        ylabel('MOA')
+        grid('on')
+        legend(loc=0)
 
 
     def dragAccel(self,v) :
@@ -166,38 +180,63 @@ class Ballistics( object ) :
         
 
 class Bullet30_06( Ballistics ) :
+    name = '.30-06'
     cal = .308   # in inches
     A = pi*(cal*Ballistics.in2m)**2/4
     MV = 2500*Ballistics.ft2m
     m = 200*Ballistics.grain2kg
 
 class Bullet22LR( Ballistics ) :
+    name = '.22LR'
     cal = .223   # in inches
     A = pi*(cal*Ballistics.in2m)**2/4
     MV = 1750*Ballistics.ft2m
     m = 30*Ballistics.grain2kg
     
 class Bullet300WinMag( Ballistics ) :
+    name = '300 Winchester Magnum'
     cal = .308   # in inches
     A = pi*(cal*Ballistics.in2m)**2/4
     MV = 2950*Ballistics.ft2m
     m = 180*Ballistics.grain2kg
-    
+
+class Bullet7mmRemMag( Ballistics ) :
+    """ Billy Odonnel's choise.
+    """
+    name = '7mm Remington Magnum'
+    cal = .284   # in inches
+    A = pi*(cal*Ballistics.in2m)**2/4
+    MV = 3110*Ballistics.ft2m
+    m = 150*Ballistics.grain2kg
+
+class Bullet65mmLapua( Ballistics ) :
+    """ Tyler's
+    """
+    name = '6.5x47mm Lapua'
+    cal = .264   # in inches
+    A = pi*(cal*Ballistics.in2m)**2/4
+    MV = 2900*Ballistics.ft2m
+    m = 123*Ballistics.grain2kg
+
 
 if __name__ == '__main__' :
     
+    bullets = [Bullet22LR(),
+               Bullet300WinMag(),
+               Bullet30_06(),
+               Bullet7mmRemMag(),
+               Bullet65mmLapua()]
+
+
     close('all')
-    b22 = Bullet22LR()
-    b22.solve()
 
-    b30_06 = Bullet30_06()
-    b30_06.solve()
+    legtxt = []
+    for b in bullets :
+        b.zeroSight(100*Ballistics.yrd2m)
+        b.solve()
+        b.plot()
+        legtxt.append(b.name)
 
-    b300winmag = Bullet300WinMag()
-    b300winmag.BC2Cd(0.509)
-    b300winmag.solve()
+    legend()
 
-    b22.plot()
-    b30_06.plot()
-    b300winmag.plot()
     show()
