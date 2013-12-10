@@ -89,12 +89,16 @@ class Ballistics( object ) :
         xlabel('Pos (yrd)')
         ylabel('Pos (in)')
         legend(loc=0)
+        grid('on')
+
+        savefig("Trajectory.png")
 
         figure(2); 
         subplot(211)
         plot(self.t,self.vel[:,0],label=self.name)
         ylabel('x vel (m/s)')
         legend(loc=0)
+        grid('on')
 
         subplot(212)
         plot(self.t,self.vel[:,1],label=self.name)
@@ -102,21 +106,28 @@ class Ballistics( object ) :
 
         xlabel('Time (sec)');
         legend(loc=0)
+        grid('on')
+
+        savefig("Velocities.png")
 
         figure(3);
-        plot(self.pos[:,0],self.energy*self.J2ftlb,label=self.name)
-        xlabel('x pos (m)')
+        plot(self.pos[:,0]*self.m2yrd,self.energy*self.J2ftlb,label=self.name)
+        xlabel('x pos (yrd)')
         ylabel('Energy (ft-lb)')
         legend(loc=0)
-
-        figure(4);
-        # 1./60 deg = 1 MOA
-        idx = self.pos[:,0] > 100
-        plot(self.pos[idx,0],arctan(self.pos[idx,1]/self.pos[idx,0])*180/pi*60,label=self.name)
-        xlabel('x pos (m)')
-        ylabel('MOA')
         grid('on')
-        legend(loc=0)
+
+        savefig("Energy.png")
+
+        # figure(4);
+        # # 1./60 deg = 1 MOA
+        # idx = self.pos[:,0] > 100
+        # plot(self.pos[idx,0]*self.m2yrd,arctan(self.pos[idx,1]/self.pos[idx,0])*180/pi*60,label=self.name)
+        # xlabel('x pos (yrd)')
+        # ylabel('MOA')
+        # grid('on')
+        # legend(loc=0)
+        
 
 
     def dragAccel(self,v) :
@@ -186,13 +197,6 @@ class Bullet30_06( Ballistics ) :
     MV = 2500*Ballistics.ft2m
     m = 200*Ballistics.grain2kg
 
-class Bullet22LR( Ballistics ) :
-    name = '.22LR'
-    cal = .223   # in inches
-    A = pi*(cal*Ballistics.in2m)**2/4
-    MV = 1750*Ballistics.ft2m
-    m = 30*Ballistics.grain2kg
-    
 class Bullet300WinMag( Ballistics ) :
     name = '300 Winchester Magnum'
     cal = .308   # in inches
@@ -209,6 +213,22 @@ class Bullet7mmRemMag( Ballistics ) :
     MV = 3110*Ballistics.ft2m
     m = 150*Ballistics.grain2kg
 
+class Bullet308Winchester( Ballistics ) :
+
+    name = ".308 Winchester"
+    cal = .308
+    A = pi*(cal*Ballistics.in2m)**2/4
+    MV = 2700*Ballistics.ft2m
+    m = 165*Ballistics.grain2kg
+
+class Bullet270Winchester( Ballistics ) :
+    name = ".270 Winchester"
+    cal = .277
+    A = pi*(cal*Ballistics.in2m)**2/4
+    MV = 2850*Ballistics.ft2m
+    m = 150*Ballistics.grain2kg
+
+
 class Bullet65mmLapua( Ballistics ) :
     """ Tyler's
     """
@@ -218,14 +238,42 @@ class Bullet65mmLapua( Ballistics ) :
     MV = 2900*Ballistics.ft2m
     m = 123*Ballistics.grain2kg
 
+class Bullet22LR( Ballistics ) :
+    name = '.22LR'
+    cal = .223   # in inches
+    A = pi*(cal*Ballistics.in2m)**2/4
+    MV = 1750*Ballistics.ft2m
+    m = 30*Ballistics.grain2kg
+    
+    
+"""Desired characteristics:
+
+1) Straight trajectory
+  a) High initial velocity
+  b) Low drag force
+     i) High mass
+    ii) Small diameter
+
+2) Low recoil
+  a) Small mass
+  b) Low initial velocity
+
+Clearly there are contradictions between these two.  One thing that is
+clear is we want small diameter.  That seems to be a good thing no
+matter what.  I'm not considering "take down power," which is yet a
+further contradiction.
+
+"""
 
 if __name__ == '__main__' :
     
-    bullets = [Bullet22LR(),
+    bullets = [#Bullet22LR(),
                Bullet300WinMag(),
                Bullet30_06(),
-               Bullet7mmRemMag(),
-               Bullet65mmLapua()]
+               Bullet308Winchester(),
+        Bullet270Winchester()]
+               #Bullet7mmRemMag(),
+               #Bullet65mmLapua()]
 
 
     close('all')
