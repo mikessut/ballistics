@@ -246,7 +246,8 @@ class Bullet22LR( Ballistics ) :
     m = 30*Ballistics.grain2kg
     
     
-"""Desired characteristics:
+"""
+Desired characteristics:
 
 1) Straight trajectory
   a) High initial velocity
@@ -258,10 +259,11 @@ class Bullet22LR( Ballistics ) :
   a) Small mass
   b) Low initial velocity
 
-Clearly there are contradictions between these two.  One thing that is
+3) Take down power
+
+Clearly there are contradictions between these.  One thing that is
 clear is we want small diameter.  That seems to be a good thing no
-matter what.  I'm not considering "take down power," which is yet a
-further contradiction.
+matter what. 
 
 """
 
@@ -271,8 +273,8 @@ if __name__ == '__main__' :
                Bullet300WinMag(),
                Bullet30_06(),
                Bullet308Winchester(),
-        Bullet270Winchester()]
-               #Bullet7mmRemMag(),
+        Bullet270Winchester(),
+               Bullet7mmRemMag()]
                #Bullet65mmLapua()]
 
 
