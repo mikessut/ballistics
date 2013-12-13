@@ -62,14 +62,17 @@ class Ballistics( object ) :
         self.setLaunchAngle(X[0])
         return X[0]
 
+    def endCond(self,pos,vel) :
+        return pos[-1][1] < -2.0 # go until 2m drop
+
     def solve(self) :
         
         pos = [array([0,-self.sightHeight])]
         vel = [self.v0]
         t = [0]
 
-        while pos[-1][1] > -2.0 :  # go until 2m drop
-
+        while not self.endCond(pos,vel) :
+        
             a = self.g + self.dragAccel(vel[-1])
 
             pos.append(pos[-1] + vel[-1]*self.dt + .5*a*self.dt**2)
@@ -119,6 +122,20 @@ class Ballistics( object ) :
 
         savefig("Energy.png")
 
+        figure(4)
+        subplot(211)
+        plot(self.t,self.pos[:,0])
+        ylabel('x position (m)')
+        grid('on')
+
+        subplot(212)
+        plot(self.t,self.pos[:,1])
+        ylabel('y position (m)')
+        grid('on')
+        xlabel('Time (sec)')
+        
+
+
         # figure(4);
         # # 1./60 deg = 1 MOA
         # idx = self.pos[:,0] > 100
@@ -135,7 +152,11 @@ class Ballistics( object ) :
         Return drag acceleration 
         Fd = .5*rho*v**2*Cd*A = m*a
         """
-        return -.5*self.rho*v**2*self.Cd*self.A/self.m
+
+        vmag = norm(v)
+        theta = arctan2(v[1],v[0])
+        dragMag = .5*self.rho*vmag**2*self.Cd*self.A/self.m
+        return -dragMag*array([cos(theta),sin(theta)])
 
     def setLaunchAngle(self,angle) :
         self.theta0 = angle
@@ -166,7 +187,8 @@ class Ballistics( object ) :
 
         return self.Cd
 
-    def calcAirDensity(self,Tfarenheight,h_ft) :
+    @staticmethod
+    def calcAirDensity(Tfarenheight,h_ft) :
         """
         See: http://en.wikipedia.org/wiki/Density_of_air
 
@@ -174,7 +196,7 @@ class Ballistics( object ) :
         
         # convert T to Kelvin
         T = (Tfarenheight-32)*5./9 + 273.15
-        h = h_ft*self.ft2m
+        h = h_ft*Ballistics.ft2m
 
         p0 = 101.325 
         T0 = 288.15
@@ -267,7 +289,8 @@ matter what.
 
 """
 
-if __name__ == '__main__' :
+#if __name__ == '__main__' :
+def bulletComparisons() :
     
     bullets = [#Bullet22LR(),
                Bullet300WinMag(),
@@ -282,7 +305,7 @@ if __name__ == '__main__' :
 
     legtxt = []
     for b in bullets :
-        b.zeroSight(100*Ballistics.yrd2m)
+        b.zeroSight(150*Ballistics.yrd2m)
         b.solve()
         b.plot()
         legtxt.append(b.name)
@@ -290,3 +313,45 @@ if __name__ == '__main__' :
     legend()
 
     show()
+
+def tempComparison() :
+    tempF = linspace(15,60,5)
+
+    b = Bullet270Winchester()
+    b.rho = b.calcAirDensity(50,0)
+    b.zeroSight(100*Ballistics.yrd2m)
+    basename = b.name
+    for T in tempF :
+        b.rho = b.calcAirDensity(T,0)
+        b.name = basename + ' T = ' + str(T) + ' F'
+        b.solve()
+        b.plot()
+
+def altComparison() :
+    alt = linspace(5000,14000,5)
+
+    b = Bullet270Winchester()
+    b.rho = b.calcAirDensity(50,0)
+    b.zeroSight(100*Ballistics.yrd2m)
+    basename = b.name
+    for a in alt :
+        b.rho = b.calcAirDensity(50,a)
+        b.name = basename + ' MSL = ' + str(a) + ' ft'
+        b.solve()
+        b.plot()
+
+def straightDown() :
+    class BulletDown( Bullet270Winchester ) :
+        def __init__(self) :
+            super(BulletDown,self).__init__()
+            self.setLaunchAngle(-pi/2)
+        
+        def endCond(self, pos, vel) :
+            return pos[-1][1] < -5000
+
+    b = BulletDown()
+
+    b.solve()
+    b.plot()
+
+    return b
