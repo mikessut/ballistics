@@ -98,14 +98,14 @@ class Ballistics( object ) :
 
         figure(2); 
         subplot(211)
-        plot(self.t,self.vel[:,0],label=self.name)
-        ylabel('x vel (m/s)')
+        plot(self.t,self.vel[:,0]/Ballistics.ft2m,label=self.name)
+        ylabel('x vel (fps)')
         legend(loc=0)
         grid('on')
 
         subplot(212)
-        plot(self.t,self.vel[:,1],label=self.name)
-        ylabel('y vel (m/s)')
+        plot(self.t,self.vel[:,1]/Ballistics.ft2m,label=self.name)
+        ylabel('y vel (fps)')
 
         xlabel('Time (sec)');
         legend(loc=0)
