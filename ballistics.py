@@ -135,6 +135,16 @@ class Ballistics( object ) :
         xlabel('Time (sec)')
         
 
+        figure(5)
+        plot(self.pos[:,0]*self.m2yrd,
+             hstack([0, diff(self.energy*self.J2ftlb)/diff(self.pos[:,0]*self.m2yrd)]),
+             label=self.name)
+        xlabel('x pos (yrd)')
+        ylabel('dEnergy/dx (ft-lb/yrd)')
+        grid('on')
+        legend(loc=0)
+        
+        savefig("dEnergy.png")
 
         # figure(4);
         # # 1./60 deg = 1 MOA
