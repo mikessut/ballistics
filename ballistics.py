@@ -53,14 +53,15 @@ class Ballistics( object ) :
         # tolerance at desired range.
 
         def minFunc(angle) :
-            self.setLaunchAngle(angle[0])
+            self.setLaunchAngle(angle)
             self.solve()
             idx = find(self.pos[:,0] > range)
-            return self.pos[idx[0],1]**2
+            return self.pos[idx[0],1]  # **2
 
-        X = fmin(minFunc,theta0_guess,ftol=.001**2)
-        self.setLaunchAngle(X[0])
-        return X[0]
+        #X = fmin(minFunc,theta0_guess,ftol=.001**2)
+        X = newton(minFunc,theta0_guess,tol=.001)
+        self.setLaunchAngle(X)
+        return X
 
     def endCond(self,pos,vel) :
         return pos[-1][1] < -2.0 # go until 2m drop
@@ -260,6 +261,12 @@ class Bullet270Winchester( Ballistics ) :
     MV = 2850*Ballistics.ft2m
     m = 150*Ballistics.grain2kg
 
+class Bullet65Creedmoor( Ballistics ) :
+    name = "6.5mm Creedmoor"
+    cal = .2645
+    A = pi*(cal*Ballistics.in2m)**2/4
+    MV = 2820*Ballistics.ft2m
+    m = 140*Ballistics.grain2kg
 
 class Bullet65mmLapua( Ballistics ) :
     """ Tyler's
@@ -307,7 +314,8 @@ def bulletComparisons() :
                Bullet30_06(),
                Bullet308Winchester(),
         Bullet270Winchester(),
-               Bullet7mmRemMag()]
+               Bullet7mmRemMag(),
+    Bullet65Creedmoor()]
                #Bullet65mmLapua()]
 
 
