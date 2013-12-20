@@ -1,5 +1,5 @@
 from numpy import *
-from scipy.optimize import fmin
+from scipy.optimize import fmin, newton
 
 class Ballistics( object ) :
 
@@ -226,8 +226,8 @@ class Bullet30_06( Ballistics ) :
     name = '.30-06'
     cal = .308   # in inches
     A = pi*(cal*Ballistics.in2m)**2/4
-    MV = 2500*Ballistics.ft2m
-    m = 200*Ballistics.grain2kg
+    MV = 2700*Ballistics.ft2m
+    m = 180*Ballistics.grain2kg  # 150, 180 fairly common
 
 class Bullet300WinMag( Ballistics ) :
     name = '300 Winchester Magnum'
@@ -251,7 +251,7 @@ class Bullet308Winchester( Ballistics ) :
     cal = .308
     A = pi*(cal*Ballistics.in2m)**2/4
     MV = 2700*Ballistics.ft2m
-    m = 165*Ballistics.grain2kg
+    m = 165*Ballistics.grain2kg  # could go lighter
 
 class Bullet270Winchester( Ballistics ) :
     name = ".270 Winchester"
