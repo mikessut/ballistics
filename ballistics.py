@@ -40,6 +40,10 @@ class Ballistics( object ) :
 
     sightHeight = 1.5*in2m  
 
+    gunMass = 7.25/kg2lb
+
+    #powderDensity = .98*1000  # kg / m**3
+
 
     # def __init__(self) :
     #     self.setLaunchAngle(0)
@@ -99,16 +103,16 @@ class Ballistics( object ) :
 
         figure(2); 
         subplot(211)
-        plot(self.t,self.vel[:,0]/Ballistics.ft2m,label=self.name)
+        plot(self.pos[:,0]*Ballistics.m2yrd,self.vel[:,0]/Ballistics.ft2m,label=self.name) # 
         ylabel('x vel (fps)')
         legend(loc=0)
         grid('on')
 
         subplot(212)
-        plot(self.t,self.vel[:,1]/Ballistics.ft2m,label=self.name)
+        plot(self.pos[:,0]*Ballistics.m2yrd,self.vel[:,1]/Ballistics.ft2m,label=self.name)
         ylabel('y vel (fps)')
 
-        xlabel('Time (sec)');
+        xlabel('x pos (yrd)');
         legend(loc=0)
         grid('on')
 
@@ -221,6 +225,20 @@ class Ballistics( object ) :
 
 
         return (p*1000)*M/R/T
+
+    def calcRecoil(self) :
+        """
+        Return recoil energy in ft-lbs
+
+        Conservation of momentum m_gun * v_gun = m_bullet * v_bullet + m_pg*v_pg
+
+        v_pg = 1.75 * v_bullet  -- Tyler's reference
+
+        """
+
+        v_gun = (self.m*self.MV + self.caseCap*self.MV*1.75)/self.gunMass
+
+        return .5*self.gunMass*v_gun**2  * Ballistics.J2ftlb
         
 
 class Bullet30_06( Ballistics ) :
@@ -229,6 +247,7 @@ class Bullet30_06( Ballistics ) :
     A = pi*(cal*Ballistics.in2m)**2/4
     MV = 2700*Ballistics.ft2m
     m = 180*Ballistics.grain2kg  # 150, 180 fairly common
+    caseCap = 68*Ballistics.grain2kg 
 
 class Bullet300WinMag( Ballistics ) :
     name = '300 Winchester Magnum'
@@ -236,6 +255,7 @@ class Bullet300WinMag( Ballistics ) :
     A = pi*(cal*Ballistics.in2m)**2/4
     MV = 2950*Ballistics.ft2m
     m = 180*Ballistics.grain2kg
+    caseCap = 89*Ballistics.grain2kg
 
 class Bullet7mmRemMag( Ballistics ) :
     """ Billy Odonnel's choise.
@@ -245,6 +265,7 @@ class Bullet7mmRemMag( Ballistics ) :
     A = pi*(cal*Ballistics.in2m)**2/4
     MV = 3110*Ballistics.ft2m
     m = 150*Ballistics.grain2kg
+    caseCap = 83.2*Ballistics.grain2kg
 
 class Bullet308Winchester( Ballistics ) :
 
@@ -253,6 +274,7 @@ class Bullet308Winchester( Ballistics ) :
     A = pi*(cal*Ballistics.in2m)**2/4
     MV = 2700*Ballistics.ft2m
     m = 165*Ballistics.grain2kg  # could go lighter
+    caseCap = 56*Ballistics.grain2kg
 
 class Bullet270Winchester( Ballistics ) :
     name = ".270 Winchester"
@@ -260,6 +282,7 @@ class Bullet270Winchester( Ballistics ) :
     A = pi*(cal*Ballistics.in2m)**2/4
     MV = 2850*Ballistics.ft2m
     m = 150*Ballistics.grain2kg
+    caseCap = 67.4*Ballistics.grain2kg
 
 class Bullet65Creedmoor( Ballistics ) :
     name = "6.5mm Creedmoor"
@@ -267,6 +290,7 @@ class Bullet65Creedmoor( Ballistics ) :
     A = pi*(cal*Ballistics.in2m)**2/4
     MV = 2820*Ballistics.ft2m
     m = 140*Ballistics.grain2kg
+    caseCap = 53*Ballistics.grain2kg
 
 class Bullet65mmLapua( Ballistics ) :
     """ Tyler's
@@ -322,13 +346,34 @@ def bulletComparisons() :
     close('all')
 
     legtxt = []
+    recoil = []
     for b in bullets :
         b.zeroSight(150*Ballistics.yrd2m)
         b.solve()
         b.plot()
-        legtxt.append(b.name)
+        legtxt.append(b.name[:5])
+
+        fre = b.calcRecoil()
+        recoil.append(fre)
+        print("%-30s%.1f" % (b.name,fre))
 
     legend()
+
+    recoil = array(recoil)
+    legtxt = array(legtxt)
+
+    figure(6)
+    ind = arange(len(recoil))
+    idx = argsort(recoil)[-1::-1]
+
+    bar(ind,recoil[idx],.35)
+    ylabel('Free recoil energy (ft-lb)')
+    ax = gca()
+    ax.set_xticks(ind)
+    ax.set_xticklabels( legtxt[idx] )
+    grid('on')
+
+    savefig("Recoil.png")
 
     show()
 
