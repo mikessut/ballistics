@@ -238,7 +238,7 @@ class Ballistics( object ) :
 
         v_gun = (self.m*self.MV + self.caseCap*self.MV*1.75)/self.gunMass
 
-        return .5*self.gunMass*v_gun**2  * Ballistics.J2ftlb
+        return .5*self.gunMass*v_gun**2 
         
 
 class Bullet30_06( Ballistics ) :
@@ -347,6 +347,7 @@ def bulletComparisons() :
 
     legtxt = []
     recoil = []
+    bul2recRatio = []
     for b in bullets :
         b.zeroSight(150*Ballistics.yrd2m)
         b.solve()
@@ -355,18 +356,20 @@ def bulletComparisons() :
 
         fre = b.calcRecoil()
         recoil.append(fre)
+        bul2recRatio.append( .5*b.m*b.MV**2 / fre )
         print("%-30s%.1f" % (b.name,fre))
 
     legend()
 
     recoil = array(recoil)
     legtxt = array(legtxt)
+    bul2recRatio = array(bul2recRatio)
 
     figure(6)
     ind = arange(len(recoil))
     idx = argsort(recoil)[-1::-1]
 
-    bar(ind,recoil[idx],.35)
+    bar(ind,recoil[idx]*Ballistics.J2ftlb,.35)
     ylabel('Free recoil energy (ft-lb)')
     ax = gca()
     ax.set_xticks(ind)
@@ -374,6 +377,19 @@ def bulletComparisons() :
     grid('on')
 
     savefig("Recoil.png")
+
+    figure(7)
+
+    idx = argsort(bul2recRatio)[-1::-1]
+
+    bar(ind,bul2recRatio[idx],.35)
+    ylabel('Bullet / Recoil Energy')
+    ax = gca()
+    ax.set_xticks(ind)
+    ax.set_xticklabels( legtxt[idx] )
+    grid('on')
+
+    savefig("Bullet to Recoil Ratio.png")
 
     show()
 
